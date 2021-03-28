@@ -15,7 +15,7 @@ SELECT create_hypertable('graphs', 'time');
 SELECT add_retention_policy('graphs', INTERVAL, '30 minutes');
 
 
-create view edges_1min as 
+create or replace view edges_1min as 
 select 
 	agg."time",
 	json_agg(
@@ -36,9 +36,9 @@ from (
 	select 
 		time_bucket(interval '1 minute', g."time") as "time",
 		obj->>'source' as sourceIp, 
-		obj->'properties'->>'sourcePort' as sourcePort, 
+		cast(obj->'properties'->>'sourcePort' as integer) as sourcePort, 
 		obj->>'destination' as destinationIp, 
-		obj->'properties'->>'destinationPort' as destinationPort, 
+		cast(obj->'properties'->>'destinationPort' as integer) as destinationPort, 
 		obj->'properties'->>'trafficType' as trafficType, 
 		avg(cast(obj->'properties'->>'weight' as double precision)) as weight, 
 		sum(cast(obj->'properties'->>'packetCount' as integer)) as packetCount
