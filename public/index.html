@@ -26,7 +26,7 @@
         var edges = new vis.DataSet(options);
         var nodeView = new vis.DataView(nodes, {
         filter: function(node) {
-            internal = node.id.startsWith("192.") || node.id.startsWith("172.") || node.id.startsWith("10.")
+            internal = isInternal(node.id);
             connEdges = edges.get({
                 filter: function(edge) {
                     return(
@@ -43,10 +43,12 @@
                     console.log(data);
                     var updatedVertices = [];
                     data.forEach(element => {
+                        
+                        var color = isInternal(element.id) ? 'green' : 'orange';
                         updatedVertices.push({
                             id: element.id,
                             label: element.id,
-                            color: 'green',
+                            color: color,
                             // shape: 'database',
                         })
                     });
@@ -100,6 +102,11 @@
                 });
         }
 
+        function isInternal(ip) {
+            internal = ip.startsWith("192.") || ip.startsWith("172.") || ip.startsWith("10.")
+            return internal
+        }
+
         function draw() {
 
             updateVertices();
@@ -130,6 +137,12 @@
                 layout: {
                     // hierarchical: true
                 },
+                physics: {
+                    barnesHut: {
+                        "springLength": 100,
+                        "springConstant": 0.01
+                    },
+                } 
             };
             network = new vis.Network(container, data, options);
         }
