@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>NetMap-Bastion</title>
+
+    <style type="text/css">
+        html,
+        body {
+            font: 10pt arial;
+            height: 100%;
+        }
+
+        #mynetwork {
+            width: 100%;
+            height: 90%;
+            border: 1px solid lightgray;
+        }
+    </style>
+
+    <script type="text/javascript" src="https://visjs.github.io/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <script type="text/javascript">
+        var options = {};
+        var nodes = new vis.DataSet(options);
+        var edges = new vis.DataSet(options);
+        var nodeView = new vis.DataView(nodes, {
+        filter: function(node) {
+            internal = node.id.startsWith("192.") || node.id.startsWith("172.") || node.id.startsWith("10.")
+            connEdges = edges.get({
+                filter: function(edge) {
+                    return(
+                        (edge.to == node.id) || (edge.from == node.id));
+                }});
+            return connEdges.length > 0 || internal;
+        }
+    });
+        var network = null;
+
+        function updateVertices() {
+            fetch("/vertices").then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    var updatedVertices = [];
+                    data.forEach(element => {
+                        updatedVertices.push({
+                            id: element.id,
+                            label: element.id,
+                            color: 'green',
+                            // shape: 'database',
+                        })
+                    });
+                    nodes.update(updatedVertices);
+                });
+        }
+
+        function updateEdges() {
+            fetch("/edges").then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    var updatedEdges = [];
+                    var updatedNodes = [];
+                    data.forEach(element => {
+                        updatedNodes.push({
+                            id: element.source+":"+element.properties.sourcePort,
+                            label: String(element.properties.sourcePort),
+                            shape: "box",
+                        });
+                        updatedNodes.push({
+                            id: element.destination+":"+element.properties.destinationPort,
+                            label: String(element.properties.destinationPort),
+                            shape: "box",
+                        });
+
+                        updatedEdges.push({
+                            id: "port-"+element.source+":"+element.properties.sourcePort,
+                            from: element.source,
+                            to: element.source+":"+element.properties.sourcePort
+                        });
+
+                        updatedEdges.push({
+                            id: "port-"+element.destination+":"+element.properties.destinationPort,
+                            from: element.destination,
+                            to: element.destination+":"+element.properties.destinationPort
+                        });
+
+                        updatedEdges.push({
+                            id: element.source+":"+element.properties.sourcePort+"-"+element.destination+":"+element.properties.destinationPort,
+                            from: element.source+":"+element.properties.sourcePort,
+                            to: element.destination+":"+element.properties.destinationPort,
+                            title: element.properties.trafficType,
+                            value: element.properties.weight,
+                            arrows: {
+                                to: true
+                            },
+                        })
+                    });
+                    edges.update(updatedEdges);
+                    nodes.update(updatedNodes);
+                });
+        }
+
+        function draw() {
+
+            updateVertices();
+            updateEdges();
+            setInterval(updateVertices, 5000);
+            setInterval(updateEdges, 5000)
+
+            // Instantiate our network object.
+            var container = document.getElementById("mynetwork");
+            var data = {
+                nodes: nodeView,
+                edges: edges,
+            };
+            var options = {
+                nodes: {
+                    shape: "dot",
+                    scaling: {
+                        customScalingFunction: function (min, max, total, value) {
+                            return value / total;
+                        },
+                        min: 5,
+                        max: 150,
+                    },
+                },
+                configure: {
+                    enabled: true
+                },
+                layout: {
+                    // hierarchical: true
+                },
+            };
+            network = new vis.Network(container, data, options);
+        }
+    </script>
+</head>
+
+<body onload="draw()">
+    <h1>NetMap - Bastion</h1>
+    <div id="mynetwork"></div>
+</body>
+
+</html>
