@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -53,10 +54,14 @@ func main() {
 	http.Handle("/", fs)
 
 	// Configure websocket route
-	http.HandleFunc("/ws", handleConnections)
+	http.HandleFunc("/ws", handleWSConnections)
 
-	// Start listening for incoming chat messages
-	go handleInbound()
+	// other routes
+	http.HandleFunc("/vertices", handleGetVertices)
+	http.HandleFunc("/edges", handleGetEdges)
+
+	// handle inbound WS messages
+	go handleInboundWSMessages()
 
 	// Start the server on localhost port 8000 and log any errors
 	log.Println("http server started on :8000")
@@ -66,7 +71,7 @@ func main() {
 	}
 }
 
-func handleConnections(w http.ResponseWriter, r *http.Request) {
+func handleWSConnections(w http.ResponseWriter, r *http.Request) {
 	// Upgrade initial GET request to a websocket
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -96,12 +101,42 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleInbound() {
+func handleGetVertices(w http.ResponseWriter, r *http.Request) {
+	vertices, err := graphRepository.FetchVertices()
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	js, err := json.Marshal(vertices)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func handleGetEdges(w http.ResponseWriter, r *http.Request) {
+	edges, err := graphRepository.FetchEdges()
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	js, err := json.Marshal(edges)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func handleInboundWSMessages() {
 	for {
 		// Grab the next message from the inbound channel
 		graph := <-inboundChannel
 		fmt.Println("received payload, inserting in db...")
-		err := graphRepository.Insert("testing", graph)
+		err := graphRepository.Insert(graph)
 		if err != nil {
 			fmt.Println(err.Error())
 		}

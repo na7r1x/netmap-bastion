@@ -43,7 +43,7 @@ func (pg PostgresRepo) Destroy() error {
 	return nil
 }
 
-func (pg PostgresRepo) Insert(reporter string, graph domain.TrafficGraph) error {
+func (pg PostgresRepo) Insert(graph domain.TrafficGraph) error {
 	statement, err := database.Prepare("INSERT INTO graphs (time,reporter,vertices,edges,packets) values(NOW(),$1,$2,$3,$4) RETURNING time")
 	if err != nil {
 		return errors.New("failed database upsert; " + err.Error())
@@ -64,7 +64,7 @@ func (pg PostgresRepo) Insert(reporter string, graph domain.TrafficGraph) error 
 		return errors.New("failed json marshalling; " + err.Error())
 	}
 
-	res, err := statement.Exec(reporter, _vertices, _edges, graph.Properties.PacketCount)
+	res, err := statement.Exec(graph.Reporter, _vertices, _edges, graph.PacketCount)
 	if err != nil {
 		return err
 	}
@@ -76,4 +76,52 @@ func (pg PostgresRepo) Insert(reporter string, graph domain.TrafficGraph) error 
 	affected = string(fmt.Sprint(a))
 	fmt.Println("DEBUG: inserted record; rows affected: " + affected)
 	return nil
+}
+
+func (s PostgresRepo) FetchVertices() ([]domain.Vertex, error) {
+	records := []domain.Vertex{}
+
+	rows, err := database.Query("SELECT obj FROM vertices")
+	if err != nil {
+		return records, errors.New("failed retrieving VIEW [vertices]; " + err.Error())
+	}
+
+	for rows.Next() {
+		var record string
+		err := rows.Scan(&record)
+		if err != nil {
+			return records, errors.New("failed mapping vertices from storage; " + err.Error())
+		}
+
+		var vertex domain.Vertex
+		err = json.Unmarshal([]byte(record), &vertex)
+
+		records = append(records, vertex)
+	}
+
+	return records, nil
+}
+
+func (s PostgresRepo) FetchEdges() ([]domain.Edge, error) {
+	records := []domain.Edge{}
+
+	rows, err := database.Query("SELECT obj FROM edges_1min")
+	if err != nil {
+		return records, errors.New("failed retrieving VIEW [edges_1m]; " + err.Error())
+	}
+
+	for rows.Next() {
+		var record string
+		err := rows.Scan(&record)
+		if err != nil {
+			return records, errors.New("failed mapping edges from storage; " + err.Error())
+		}
+
+		var edge domain.Edge
+		err = json.Unmarshal([]byte(record), &edge)
+
+		records = append(records, edge)
+	}
+
+	return records, nil
 }
