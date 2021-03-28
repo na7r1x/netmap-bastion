@@ -95,6 +95,9 @@ func (s PostgresRepo) FetchVertices() ([]domain.Vertex, error) {
 
 		var vertex domain.Vertex
 		err = json.Unmarshal([]byte(record), &vertex)
+		if err != nil {
+			return records, errors.New("failed unmarshalling to vertex object; " + err.Error())
+		}
 
 		records = append(records, vertex)
 	}
@@ -105,7 +108,7 @@ func (s PostgresRepo) FetchVertices() ([]domain.Vertex, error) {
 func (s PostgresRepo) FetchEdges() ([]domain.Edge, error) {
 	records := []domain.Edge{}
 
-	rows, err := database.Query("SELECT obj FROM edges_1min")
+	rows, err := database.Query("SELECT obj FROM edges_1min ORDER BY time desc limit 1")
 	if err != nil {
 		return records, errors.New("failed retrieving VIEW [edges_1m]; " + err.Error())
 	}
@@ -117,10 +120,15 @@ func (s PostgresRepo) FetchEdges() ([]domain.Edge, error) {
 			return records, errors.New("failed mapping edges from storage; " + err.Error())
 		}
 
-		var edge domain.Edge
-		err = json.Unmarshal([]byte(record), &edge)
+		var edges []domain.Edge
+		err = json.Unmarshal([]byte(record), &edges)
+		if err != nil {
+			return records, errors.New("failed unmarshalling to edge object; " + err.Error())
 
-		records = append(records, edge)
+		}
+		for _, edge := range edges {
+			records = append(records, edge)
+		}
 	}
 
 	return records, nil
