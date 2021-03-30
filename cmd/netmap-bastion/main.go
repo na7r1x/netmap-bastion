@@ -90,7 +90,7 @@ func handleWSConnections(w http.ResponseWriter, r *http.Request) {
 		var graph domain.TrafficGraph
 		err := ws.ReadJSON(&graph)
 		if err != nil {
-			log.Printf("error: %v", err)
+			log.Printf("error reading JSON from websocket: %v", err)
 			delete(clients, ws)
 			break
 		}
