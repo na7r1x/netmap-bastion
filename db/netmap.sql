@@ -12,7 +12,7 @@ CREATE TABLE graphs (
 );
 
 SELECT create_hypertable('graphs', 'time');
-SELECT add_retention_policy('graphs', INTERVAL, '30 minutes');
+SELECT add_retention_policy('graphs', INTERVAL '30 minutes');
 
 
 create or replace view edges_1min as 
@@ -46,7 +46,11 @@ from (
 	group by time_bucket(interval '1 minute', g."time"), sourceIp, sourcePort, destinationIp, destinationPort, trafficType
 ) as agg
 group by "time"
-order by "time"
+order by "time";
+
+create or replace view vertices as 
+select distinct on (obj->>'id') obj->>'id' as hostId, obj
+from graphs g, json_array_elements(g.vertices) obj;
 
 
 select jsonb_agg(unique_vertices.obj) as vertices
