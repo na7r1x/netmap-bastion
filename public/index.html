@@ -25,16 +25,16 @@
         var nodes = new vis.DataSet(options);
         var edges = new vis.DataSet(options);
         var nodeView = new vis.DataView(nodes, {
-        filter: function(node) {
-            internal = isInternal(node.id);
-            connEdges = edges.get({
-                filter: function(edge) {
-                    return(
-                        (edge.to == node.id) || (edge.from == node.id));
-                }});
-            return connEdges.length > 0 || internal;
-        }
-    });
+            filter: function(node) {
+                internal = isInternal(node.id);
+                connEdges = edges.get({
+                    filter: function(edge) {
+                        return(
+                            (edge.to == node.id) || (edge.from == node.id));
+                    }});
+                return connEdges.length > 0 || internal;
+            }
+        });
         var network = null;
 
         function updateVertices() {
@@ -130,18 +130,65 @@
                         min: 5,
                         max: 150,
                     },
+                    shapeProperties: {
+                        interpolation: false    // 'true' for intensive zooming
+                    }
                 },
                 configure: {
                     enabled: true
                 },
                 layout: {
                     // hierarchical: true
+                    improvedLayout:false
                 },
                 physics: {
+                    // barnesHut: {
+                    //     "springLength": 100,
+                    //     "springConstant": 0.01
+                    // },
+                    enabled: true,
                     barnesHut: {
-                        "springLength": 100,
-                        "springConstant": 0.01
+                        gravitationalConstant: -2000,
+                        centralGravity: 0.3,
+                        springLength: 95,
+                        springConstant: 0.04,
+                        damping: 0.09,
+                        avoidOverlap: 0
                     },
+                    forceAtlas2Based: {
+                        gravitationalConstant: -50,
+                        centralGravity: 0.01,
+                        springConstant: 0.08,
+                        springLength: 100,
+                        damping: 0.4,
+                        avoidOverlap: 0
+                    },
+                    repulsion: {
+                        centralGravity: 0.2,
+                        springLength: 200,
+                        springConstant: 0.05,
+                        nodeDistance: 100,
+                        damping: 0.09
+                    },
+                    hierarchicalRepulsion: {
+                        centralGravity: 0.0,
+                        springLength: 100,
+                        springConstant: 0.01,
+                        nodeDistance: 120,
+                        damping: 0.09
+                    },
+                    maxVelocity: 50,
+                    minVelocity: 0.1,
+                    solver: 'barnesHut',
+                    stabilization: {
+                        enabled: true,
+                        iterations: 1000,
+                        updateInterval: 100,
+                        onlyDynamicEdges: false,
+                        fit: true
+                    },
+                    timestep: 0.5,
+                    adaptiveTimestep: true
                 } 
             };
             network = new vis.Network(container, data, options);
