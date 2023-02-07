@@ -5,7 +5,9 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
-import '@elastic/eui/dist/eui_theme_light.css';
+import "@elastic/eui/dist/eui_theme_light.css";
+import "@elastic/charts/dist/theme_light.css";
+
 import { EuiProvider, EuiThemeProvider } from '@elastic/eui';
 
 import { RouteProvider } from './routes/RouteProvider'
@@ -16,7 +18,7 @@ const router = createBrowserRouter(RouteProvider.getRoutes())
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <EuiProvider>
-      <EuiThemeProvider>
+      <EuiThemeProvider colorMode='light'>
         <RouterProvider router={router} />
       </EuiThemeProvider>
     </EuiProvider>

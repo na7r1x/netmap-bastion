@@ -14,24 +14,14 @@ const headerProps = {
 const isDarkTheme = false;
 const euiTheme = isDarkTheme ? EUI_CHARTS_THEME_DARK.theme : EUI_CHARTS_THEME_LIGHT.theme;
 
-const data = [
-    { x: 0, y: 2 },
-    { x: 1, y: 7 },
-    { x: 2, y: 3 },
-    { x: 3, y: 6 },
-    { x: 4, y: 6 },
-    { x: 5, y: 6 },
-    { x: 6, y: 6 },
-    { x: 7, y: 6 },
-    { x: 8, y: 6 },
-    { x: 9, y: 6 },
-    { x: 10, y: 6 },
-    { x: 11, y: 6 },
-];
+const historyResponse = await fetch("http://localhost:8000/history");
+const data = await historyResponse.json();
+
+console.log(data)
 
 const bottomPanel = (
     <Chart
-        size={{ height: 200 }}
+        size={["100%", 500]}
     >
         <Settings
             theme={euiTheme}
@@ -41,25 +31,27 @@ const bottomPanel = (
             id="test"
             name="test"
             data={data}
-            xScaleType={ScaleType.Linear}
+            xScaleType={ScaleType.Time}
             yScaleType={ScaleType.Linear}
-            xAccessor={'x'}
-            yAccessors={['y']}
+            xAccessor="time"
+            yAccessors={["packetCount"]}
 
         />
 
         <Axis
-            title={formatDate(Date.now(), dateFormatAliases.date)}
+            title="Time"
+            // title={formatDate(Date.now(), dateFormatAliases.date)}
             id="bottom-axis"
             position="bottom"
             tickFormat={timeFormatter(niceTimeFormatByDay(1))}
-
-        />
+            
+            />
         <Axis
+            title="Packet Count"
             id="left-axis"
             position="left"
-            showGridLines
-            tickFormat={(d) => Number(d).toFixed(2)}
+            // showGridLines
+            // tickFormat={(d) => Number(d).toFixed(2)}
         />
     </Chart>
 )
