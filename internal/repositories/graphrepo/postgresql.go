@@ -133,3 +133,24 @@ func (s PostgresRepo) FetchEdges() ([]domain.Edge, error) {
 
 	return records, nil
 }
+
+func (s PostgresRepo) FetchHistory() ([]domain.GraphHistory, error) {
+	records := []domain.GraphHistory{}
+
+	rows, err := database.Query("SELECT time, sum FROM edges_1min ORDER BY time")
+	if err != nil {
+		return records, errors.New("failed retrieving VIEW [edges_1m]; " + err.Error())
+	}
+
+	for rows.Next() {
+		var record domain.GraphHistory
+		err := rows.Scan(&record.Time, &record.PacketCount)
+		if err != nil {
+			return records, errors.New("failed mapping records to GraphHistory object; " + err.Error())
+		}
+
+		records = append(records, record)
+	}
+
+	return records, nil
+}

@@ -35,3 +35,8 @@ type EdgeProperties struct {
 	SourcePort      int `json:"sourcePort"`
 	DestinationPort int `json:"destinationPort"`
 }
+
+type GraphHistory struct {
+	Time        string `json:"time"`
+	PacketCount string `json:"packetCount"`
+}

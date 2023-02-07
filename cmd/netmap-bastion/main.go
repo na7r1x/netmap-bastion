@@ -59,6 +59,7 @@ func main() {
 	// other routes
 	http.HandleFunc("/vertices", handleGetVertices)
 	http.HandleFunc("/edges", handleGetEdges)
+	http.HandleFunc("/history", handleGetHistory)
 
 	// handle inbound WS messages
 	go handleInboundWSMessages()
@@ -122,6 +123,21 @@ func handleGetEdges(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err.Error())
 	}
 	js, err := json.Marshal(edges)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func handleGetHistory(w http.ResponseWriter, r *http.Request) {
+	history, err := graphRepository.FetchHistory()
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	js, err := json.Marshal(history)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
