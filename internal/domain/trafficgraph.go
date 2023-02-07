@@ -38,5 +38,5 @@ type EdgeProperties struct {
 
 type GraphHistory struct {
 	Time        string `json:"time"`
-	PacketCount string `json:"packetCount"`
+	PacketCount int    `json:"packetCount"`
 }

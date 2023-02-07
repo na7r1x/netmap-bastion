@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var disableCORS = true
+
 var clients = make(map[*websocket.Conn]string) // connected clients
 
 var inboundChannel = make(chan domain.TrafficGraph)
@@ -113,6 +115,9 @@ func handleGetVertices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if disableCORS {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -128,6 +133,9 @@ func handleGetEdges(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if disableCORS {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -143,6 +151,9 @@ func handleGetHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if disableCORS {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
